@@ -12,17 +12,17 @@ namespace devilution {
 
 uint8_t *GetInfravisionTRN()
 {
-	return &LightTables[16 * 256];
+	return InfraTables.data();
 }
 
 uint8_t *GetStoneTRN()
 {
-	return &LightTables[17 * 256];
+	return StoneTables.data();
 }
 
 uint8_t *GetPauseTRN()
 {
-	return &LightTables[18 * 256];
+	return PauseTables.data();
 }
 
 std::optional<std::array<uint8_t, 256>> GetClassTRN(Player &player)

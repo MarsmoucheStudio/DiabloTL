@@ -190,6 +190,7 @@ constexpr std::array<char, 6> CharChar = {
 	'm', // monk
 	'b',
 	'c',
+	't', // cleric
 };
 
 /**

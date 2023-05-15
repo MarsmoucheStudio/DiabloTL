@@ -255,14 +255,14 @@ void PlayerLeftMsg(int pnum, bool left)
 	delta_close_portal(pnum);
 	RemovePlrMissiles(player);
 	if (left) {
-		string_view pszFmt = _("Player '{:s}' just left the game");
+		string_view pszFmt = _("Player '{:s}' just vanished from the realm");
 		switch (sgdwPlayerLeftReasonTbl[pnum]) {
 		case LEAVE_ENDING:
-			pszFmt = _("Player '{:s}' killed Diablo and left the game!");
+			pszFmt = _("Player '{:s}' killed Diablo and vanished the realm!");
 			gbSomebodyWonGameKludge = true;
 			break;
 		case LEAVE_DROP:
-			pszFmt = _("Player '{:s}' dropped due to timeout");
+			pszFmt = _("Player '{:s}' vanished");
 			break;
 		}
 		EventPlrMsg(fmt::format(fmt::runtime(pszFmt), player._pName));
@@ -784,7 +784,7 @@ bool NetInit(bool bSinglePlayer)
 	Player &myPlayer = *MyPlayer;
 	// separator for marking messages from a different game
 	AddMessageToChatLog(_("New Game"), nullptr, UiFlags::ColorRed);
-	AddMessageToChatLog(fmt::format(fmt::runtime(_("Player '{:s}' (level {:d}) just joined the game")), myPlayer._pName, myPlayer._pLevel));
+	AddMessageToChatLog(fmt::format(fmt::runtime(_("Player '{:s}' (level {:d}) just apeared in the realm")), myPlayer._pName, myPlayer._pLevel));
 
 	return true;
 }
@@ -835,9 +835,9 @@ void recv_plrinfo(int pnum, const TCmdPlrInfoHdr &header, bool recv)
 
 	string_view szEvent;
 	if (sgbPlayerTurnBitTbl[pnum]) {
-		szEvent = _("Player '{:s}' (level {:d}) just joined the game");
+		szEvent = _("Player '{:s}' (level {:d}) just apeared in the realm");
 	} else {
-		szEvent = _("Player '{:s}' (level {:d}) is already in the game");
+		szEvent = _("Player '{:s}' (level {:d}) is already in the realm");
 	}
 	EventPlrMsg(fmt::format(fmt::runtime(szEvent), player._pName, player._pLevel));
 

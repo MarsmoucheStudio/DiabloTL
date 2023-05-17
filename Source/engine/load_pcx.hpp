@@ -1,77 +1,42 @@
-#include "engine/load_pcx.hpp"
+#pragma once
 
-#include <cstddef>
-#include <cstring>
-#include <memory>
-#include <utility>
-
-#ifdef DEBUG_PCX_TO_CL2_SIZE
-#include <iostream>
-#endif
+#include <cstdint>
 
 #include <SDL.h>
 
-#include "mpq/mpq_common.hpp"
-#include "utils/log.hpp"
-#include "utils/str_cat.hpp"
+#include "engine/clx_sprite.hpp"
+#include "utils/stdcompat/optional.hpp"
 
 #ifdef UNPACKED_MPQS
-#include "engine/load_clx.hpp"
-#include "engine/load_file.hpp"
+#define DEVILUTIONX_PCX_EXT ".clx"
 #else
-#include "engine/assets.hpp"
-#include "utils/pcx.hpp"
-#include "utils/pcx_to_clx.hpp"
-#endif
-
-#ifdef USE_SDL1
-#include "utils/sdl2_to_1_2_backports.h"
+#define DEVILUTIONX_PCX_EXT ".pcx"
 #endif
 
 namespace devilution {
 
-OptionalOwnedClxSpriteList LoadPcxSpriteList(const char *filename, int numFramesOrFrameHeight, std::optional<uint8_t> transparentColor, SDL_Color *outPalette, bool logError)
+/**
+ * @brief Loads a PCX file as a CLX sprite list.
+ *
+ * @param filename
+ * @param numFramesOrFrameHeight Pass a positive value with the number of frames, or the frame height as a negative value.
+ * @param transparentColor
+ * @param outPalette
+ * @return OptionalOwnedClxSpriteList
+ */
+OptionalOwnedClxSpriteList LoadPcxSpriteList(const char *filename, int numFramesOrFrameHeight, std::optional<uint8_t> transparentColor = std::nullopt, SDL_Color *outPalette = nullptr, bool logError = true);
+
+/**
+ * @brief Loads a PCX file as a CLX sprite list with a single sprite.
+ *
+ * @param filename
+ * @param transparentColor
+ * @param outPalette
+ * @return OptionalOwnedClxSpriteList
+ */
+inline OptionalOwnedClxSpriteList LoadPcx(const char *filename, std::optional<uint8_t> transparentColor = std::nullopt, SDL_Color *outPalette = nullptr, bool logError = true)
 {
-	char path[MaxMpqPathSize];
-	char *pathEnd = BufCopy(path, filename, DEVILUTIONX_PCX_EXT);
-	*pathEnd = '\0';
-#ifdef UNPACKED_MPQS
-	OptionalOwnedClxSpriteList result = LoadOptionalClx(path);
-	if (!result) {
-		if (logError)
-			LogError("Missing file: {}", path);
-		return result;
-	}
-	if (outPalette != nullptr) {
-		std::memcpy(pathEnd - 3, "pal", 3);
-		std::array<uint8_t, 256 * 3> palette;
-		LoadFileInMem(path, palette);
-		for (unsigned i = 0; i < 256; i++) {
-			outPalette[i].r = palette[i * 3];
-			outPalette[i].g = palette[i * 3 + 1];
-			outPalette[i].b = palette[i * 3 + 2];
-#ifndef USE_SDL1
-			outPalette[i].a = SDL_ALPHA_OPAQUE;
-#endif
-		}
-	}
-	return result;
-#else
-	size_t fileSize;
-	AssetHandle handle = OpenAsset(path, fileSize);
-	if (!handle.ok()) {
-		if (logError)
-			LogError("Missing file: {}", path);
-		return std::nullopt;
-	}
-#ifdef DEBUG_PCX_TO_CL2_SIZE
-	std::cout << filename;
-#endif
-	OptionalOwnedClxSpriteList result = PcxToClx(handle, fileSize, numFramesOrFrameHeight, transparentColor, outPalette);
-	if (!result)
-		return std::nullopt;
-	return result;
-#endif
+	return LoadPcxSpriteList(filename, 1, transparentColor, outPalette, logError);
 }
 
 } // namespace devilution

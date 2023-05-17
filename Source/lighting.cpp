@@ -6,6 +6,7 @@
 #include "lighting.h"
 
 #include <algorithm>
+#include <numeric>
 
 #include "automap.h"
 #include "diablo.h"
@@ -20,7 +21,10 @@ int VisionId;
 Light Lights[MAXLIGHTS];
 uint8_t ActiveLights[MAXLIGHTS];
 int ActiveLightCount;
-std::array<uint8_t, LIGHTSIZE> LightTables;
+std::array<std::array<uint8_t, 256>, NumLightingLevels> LightTables;
+std::array<uint8_t, 256> InfravisionTable;
+std::array<uint8_t, 256> StoneTable;
+std::array<uint8_t, 256> PauseTable;
 bool DisableLighting;
 bool UpdateLighting;
 
@@ -58,9 +62,13 @@ const DisplacementOf<int8_t> VisionCrawlTable[23][15] = {
 	// clang-format on
 };
 
-uint8_t lightradius[16][128];
+/** @brief Number of supported light radiuses (first radius starts with 0) */
+constexpr size_t NumLightRadiuses = 16;
+/** Falloff tables for the light cone */
+uint8_t LightFalloffs[NumLightRadiuses][128];
 bool dovision;
-uint8_t lightblock[64][16][16];
+/** interpolations of a 32x32 (16x16 mirrored) light circle moving between tiles in steps of 1/8 of a tile */
+uint8_t LightConeInterpolations[8][8][16][16];
 
 /** RadiusAdj maps from VisionCrawlTable index to lighting vision radius adjustment. */
 const uint8_t RadiusAdj[23] = { 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 4, 3, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0 };
@@ -90,7 +98,7 @@ void RotateRadius(int *x, int *y, int *dx, int *dy, int *lx, int *ly, int *bx, i
 	}
 }
 
-void SetLight(Point position, char v)
+void SetLight(Point position, uint8_t v)
 {
 	if (LoadingMapObjects)
 		dPreLight[position.x][position.y] = v;
@@ -98,7 +106,7 @@ void SetLight(Point position, char v)
 		dLight[position.x][position.y] = v;
 }
 
-char GetLight(Point position)
+uint8_t GetLight(Point position)
 {
 	if (LoadingMapObjects)
 		return dPreLight[position.x][position.y];
@@ -109,6 +117,7 @@ char GetLight(Point position)
 void DoUnLight(int nXPos, int nYPos, int nRadius)
 {
 	nRadius++;
+	nRadius++; // If lights moved at a diagonal it can result in some extra tiles being lit
 
 	int minX = nXPos - nRadius;
 	int maxX = nXPos + nRadius;
@@ -211,6 +220,9 @@ bool DoCrawl(unsigned minRadius, unsigned maxRadius, tl::function_ref<bool(Displ
 
 void DoLighting(Point position, int nRadius, int lnum)
 {
+	assert(nRadius >= 0 && nRadius <= NumLightRadiuses);
+	assert(InDungeonBounds(position));
+
 	int xoff = 0;
 	int yoff = 0;
 	int lightX = 0;
@@ -252,25 +264,22 @@ void DoLighting(Point position, int nRadius, int lnum)
 		maxY = MAXDUNY - position.y;
 	}
 
-	if (InDungeonBounds(position)) {
-		if (IsNoneOf(leveltype, DTYPE_NEST, DTYPE_CRYPT)) {
-			SetLight(position, 0);
-		} else if (GetLight(position) > lightradius[nRadius][0]) {
-			SetLight(position, lightradius[nRadius][0]);
-		}
+	if (IsNoneOf(leveltype, DTYPE_NEST, DTYPE_CRYPT)) {
+		SetLight(position, 0);
+	} else if (GetLight(position) > LightFalloffs[nRadius][0]) {
+		SetLight(position, LightFalloffs[nRadius][0]);
 	}
 
 	for (int i = 0; i < 4; i++) {
-		int mult = xoff + 8 * yoff;
 		int yBound = i > 0 && i < 3 ? maxY : minY;
 		int xBound = i < 2 ? maxX : minX;
 		for (int y = 0; y < yBound; y++) {
 			for (int x = 1; x < xBound; x++) {
-				int radiusBlock = lightblock[mult][y + blockY][x + blockX];
-				if (radiusBlock >= 128)
+				int linearDistance = LightConeInterpolations[xoff][yoff][x + blockX][y + blockY];
+				if (linearDistance >= 128)
 					continue;
 				Point temp = position + (Displacement { x, y }).Rotate(-i);
-				int8_t v = lightradius[nRadius][radiusBlock];
+				uint8_t v = LightFalloffs[nRadius][linearDistance];
 				if (!InDungeonBounds(temp))
 					continue;
 				if (v < GetLight(temp))
@@ -335,183 +344,93 @@ void DoVision(Point position, int radius, MapExplorationType doAutomap, bool vis
 
 void MakeLightTable()
 {
-	uint8_t *tbl = LightTables.data();
-	int shade = 0;
-	int lights = 15;
-
-	for (int i = 0; i < lights; i++) {
-		*tbl++ = 0;
-		for (int j = 0; j < 8; j++) {
-			uint8_t col = 16 * j + shade;
-			uint8_t max = 16 * j + 15;
-			for (int k = 0; k < 16; k++) {
-				if (k != 0 || j != 0) {
-					*tbl++ = col;
+	// Generate 16 gradually darker translation tables for doing lighting
+	uint8_t shade = 0;
+	constexpr uint8_t black = 0;
+	constexpr uint8_t white = 255;
+	for (auto &lightTable : LightTables) {
+		uint8_t colorIndex = 0;
+		for (uint8_t steps : { 16, 16, 16, 16, 16, 16, 16, 16, 8, 8, 8, 8, 16, 16, 16, 16, 16, 16 }) {
+			const uint8_t shading = shade * steps / 16;
+			const uint8_t shadeStart = colorIndex;
+			const uint8_t shadeEnd = shadeStart + steps - 1;
+			for (uint8_t step = 0; step < steps; step++) {
+				if (colorIndex == black) {
+					lightTable[colorIndex++] = black;
+					continue;
 				}
-				if (col < max) {
-					col++;
-				} else {
-					max = 0;
-					col = 0;
-				}
-			}
-		}
-		for (int j = 16; j < 20; j++) {
-			uint8_t col = 8 * j + (shade >> 1);
-			uint8_t max = 8 * j + 7;
-			for (int k = 0; k < 8; k++) {
-				*tbl++ = col;
-				if (col < max) {
-					col++;
-				} else {
-					max = 0;
-					col = 0;
-				}
-			}
-		}
-		for (int j = 10; j < 16; j++) {
-			uint8_t col = 16 * j + shade;
-			uint8_t max = 16 * j + 15;
-			for (int k = 0; k < 16; k++) {
-				*tbl++ = col;
-				if (col < max) {
-					col++;
-				} else {
-					max = 0;
-					col = 0;
-				}
-				if (col == 255) {
-					max = 0;
-					col = 0;
-				}
+				int color = shadeStart + step + shading;
+				if (color > shadeEnd || color == white)
+					color = black;
+				lightTable[colorIndex++] = color;
 			}
 		}
 		shade++;
 	}
 
-	for (int i = 0; i < 256; i++) {
-		*tbl++ = 0;
-	}
+	LightTables[15] = {}; // Make last shade pitch black
 
 	if (leveltype == DTYPE_HELL) {
-		uint8_t blood[16];
-		tbl = LightTables.data();
-		for (int i = 0; i < lights; i++) {
-			int l1 = lights - i;
-			int l2 = l1;
-			int div = lights / l1;
-			int rem = lights % l1;
-			int cnt = 0;
-			blood[0] = 0;
-			uint8_t col = 1;
-			for (int j = 1; j < 16; j++) {
-				blood[j] = col;
-				l2 += rem;
-				if (l2 > l1 && j < 15) {
-					j++;
-					blood[j] = col;
-					l2 -= l1;
-				}
-				cnt++;
-				if (cnt == div) {
-					col++;
-					cnt = 0;
-				}
+		// Blood wall lighting
+		const int shades = LightTables.size() - 1;
+		for (int i = 0; i < shades; i++) {
+			auto &lightTable = LightTables[i];
+			constexpr int range = 16;
+			for (int j = 0; j < range; j++) {
+				uint8_t color = ((range - 1) << 4) / shades * (shades - i) / range * (j + 1);
+				color = 1 + (color >> 4);
+				lightTable[j + 1] = color;
+				lightTable[31 - j] = color;
 			}
-			*tbl++ = 0;
-			for (int j = 1; j <= 15; j++) {
-				*tbl++ = blood[j];
-			}
-			for (int j = 15; j > 0; j--) {
-				*tbl++ = blood[j];
-			}
-			*tbl++ = 1;
-			tbl += 224;
 		}
-		*tbl++ = 0;
-		for (int j = 0; j < 31; j++) {
-			*tbl++ = 1;
-		}
-		tbl += 224;
+	} else if (IsAnyOf(leveltype, DTYPE_NEST, DTYPE_CRYPT)) {
+		// Make the lava fully bright
+		for (auto &lightTable : LightTables)
+			std::iota(lightTable.begin(), lightTable.begin() + 16, 0);
+		LightTables[15][0] = 0;
+		std::fill_n(LightTables[15].begin() + 1, 15, 1);
 	}
+
+	LoadFileInMem("plrgfx\\infra.trn", InfravisionTable);
+	LoadFileInMem("plrgfx\\stone.trn", StoneTable);
+	LoadFileInMem("gendata\\pause.trn", PauseTable);
+
+	// Generate light falloffs ranges
 	if (IsAnyOf(leveltype, DTYPE_NEST, DTYPE_CRYPT)) {
-		tbl = LightTables.data();
-		for (int i = 0; i < lights; i++) {
-			*tbl++ = 0;
-			for (int j = 1; j < 16; j++)
-				*tbl++ = j;
-			tbl += 240;
-		}
-		*tbl++ = 0;
-		for (int j = 1; j < 16; j++)
-			*tbl++ = 1;
-		tbl += 240;
-	}
-
-	LoadFileInMem("plrgfx\\infra.trn", tbl, 256);
-	tbl += 256;
-
-	LoadFileInMem("plrgfx\\stone.trn", tbl, 256);
-	tbl += 256;
-
-	for (int i = 0; i < 8; i++) {
-		for (uint8_t col = 226; col < 239; col++) {
-			if (i != 0 || col != 226) {
-				*tbl++ = col;
-			} else {
-				*tbl++ = 0;
-			}
-		}
-		*tbl++ = 0;
-		*tbl++ = 0;
-		*tbl++ = 0;
-	}
-	for (int i = 0; i < 4; i++) {
-		uint8_t col = 224;
-		for (int j = 224; j < 239; j += 2) {
-			*tbl++ = col;
-			col += 2;
-		}
-	}
-	for (int i = 0; i < 6; i++) {
-		for (uint8_t col = 224; col < 239; col++) {
-			*tbl++ = col;
-		}
-		*tbl++ = 0;
-	}
-
-	for (int j = 0; j < 16; j++) {
-		for (int i = 0; i < 128; i++) {
-			if (i > (j + 1) * 8) {
-				lightradius[j][i] = 15;
-			} else {
-				double fs = (double)15 * i / ((double)8 * (j + 1));
-				lightradius[j][i] = static_cast<uint8_t>(fs + 0.5);
-			}
-		}
-	}
-
-	if (IsAnyOf(leveltype, DTYPE_NEST, DTYPE_CRYPT)) {
-		for (int j = 0; j < 16; j++) {
+		for (int j = 0; j < NumLightRadiuses; j++) {
 			double fa = (sqrt((double)(16 - j))) / 128;
 			fa *= fa;
 			for (int i = 0; i < 128; i++) {
-				lightradius[15 - j][i] = 15 - static_cast<uint8_t>(fa * (double)((128 - i) * (128 - i)));
-				if (lightradius[15 - j][i] > 15)
-					lightradius[15 - j][i] = 0;
-				lightradius[15 - j][i] = lightradius[15 - j][i] - static_cast<uint8_t>((15 - j) / 2);
-				if (lightradius[15 - j][i] > 15)
-					lightradius[15 - j][i] = 0;
+				uint8_t color = 15 - static_cast<uint8_t>(fa * (double)((128 - i) * (128 - i)));
+				if (color > 15)
+					color = 0;
+				color -= static_cast<uint8_t>((NumLightRadiuses - j - 1) / 2);
+				if (color > 15)
+					color = 0;
+				LightFalloffs[NumLightRadiuses - j - 1][i] = color;
+			}
+		}
+	} else {
+		for (int j = 0; j < NumLightRadiuses; j++) {
+			for (int i = 0; i < 128; i++) {
+				if (i > (j + 1) * 8) {
+					LightFalloffs[j][i] = 15;
+				} else {
+					double fs = (double)15 * i / ((double)8 * (j + 1));
+					LightFalloffs[j][i] = static_cast<uint8_t>(fs + 0.5);
+				}
 			}
 		}
 	}
-	for (int j = 0; j < 8; j++) {
-		for (int i = 0; i < 8; i++) {
-			for (int k = 0; k < 16; k++) {
-				for (int l = 0; l < 16; l++) {
-					int a = (8 * l - j);
-					int b = (8 * k - i);
-					lightblock[j * 8 + i][k][l] = static_cast<uint8_t>(sqrt(a * a + b * b));
+
+	// Generate the linght cone interpolations
+	for (int offsetY = 0; offsetY < 8; offsetY++) {
+		for (int offsetX = 0; offsetX < 8; offsetX++) {
+			for (int y = 0; y < 16; y++) {
+				for (int x = 0; x < 16; x++) {
+					int a = (8 * x - offsetY);
+					int b = (8 * y - offsetX);
+					LightConeInterpolations[offsetX][offsetY][x][y] = static_cast<uint8_t>(sqrt(a * a + b * b));
 				}
 			}
 		}
@@ -806,21 +725,12 @@ void ProcessVisionList()
 
 void lighting_color_cycling()
 {
-	if (leveltype != DTYPE_HELL) {
-		return;
-	}
-
-	uint8_t *tbl = LightTables.data();
-
-	for (int j = 0; j < 16; j++) {
-		tbl++;
-		uint8_t col = *tbl;
-		for (int i = 0; i < 30; i++) {
-			tbl[0] = tbl[1];
-			tbl++;
+	for (auto &lightTable : LightTables) {
+		uint8_t firstColor = lightTable[1];
+		for (int colorIndex = 1; colorIndex < 31; colorIndex++) {
+			lightTable[colorIndex] = lightTable[colorIndex + 1];
 		}
-		*tbl = col;
-		tbl += 225;
+		lightTable[31] = firstColor;
 	}
 }
 

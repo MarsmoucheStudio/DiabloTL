@@ -4,6 +4,9 @@
 namespace devilution {
 
 const char *const CreditLines[] = {
+	N_("Theodore's lair mod"),
+	"	Turkeydev1",
+	"",
 	N_("Game Design"),
 	"	Blizzard North",
 	"",

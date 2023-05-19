@@ -3953,6 +3953,9 @@ void InitObjects()
 				case HeroClass::Barbarian:
 					spId = TEXT_BLOODWAR;
 					break;
+				case HeroClass::Cleric:
+					spId = TEXT_BLOODWAR;
+					break;
 				}
 				Quests[Q_WARLORD]._qmsg = spId;
 				AddBookLever(OBJ_STEELTOME, SetPiece, spId);

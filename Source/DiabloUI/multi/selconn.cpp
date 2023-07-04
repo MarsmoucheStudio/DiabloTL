@@ -11,8 +11,8 @@ namespace devilution {
 int provider;
 const char *ConnectionNames[] {
 	"ZeroTier",
-	N_("Client-Server (TCP)"),
-	N_("Loopback"),
+	N_("Theo's B.net (TCP)"),
+	N_("Offline"),
 };
 
 namespace {
@@ -107,7 +107,7 @@ void SelconnFocus(int value)
 	int players = MAX_PLRS;
 	switch (vecConnItems[value]->m_value) {
 	case SELCONN_TCP:
-		CopyUtf8(selconn_Description, _("All computers must be connected to a TCP-compatible network."), sizeof(selconn_Description));
+		CopyUtf8(selconn_Description, _("All computers must be connected to a TCP-compatible network or Theo's B.net (check in Support)."), sizeof(selconn_Description));
 		players = MAX_PLRS;
 		break;
 	case SELCONN_ZT:

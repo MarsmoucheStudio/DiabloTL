@@ -20,6 +20,7 @@ namespace devilution {
 
 enum _talker_id : uint8_t {
 	TOWN_SMITH,
+	TOWN_COWER,
 	TOWN_HEALER,
 	TOWN_DEADGUY,
 	TOWN_TAVERN,

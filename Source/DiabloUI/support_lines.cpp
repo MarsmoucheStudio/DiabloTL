@@ -7,7 +7,7 @@ const char *const SupportLines[] = {
 	"",
 	N_("TurkeyDev1 maintain a chat server at discord.gg/7BKyR4JYWx Follow the links to join our community where we talk about things related to Diablo, and the Hellfire expansion."),
 	"",
-	N_("We also maintain a gaming network. If you want to use it follow this link : https://dinde451.github.io/Theodore-s-Lair/chatroom.html"),
+	N_("We also maintain a gaming network. To Join it Download RadminVPN and join the following network : Theo's B.net / 123456. For more help join our Discord Server."),
 	"",
 	"",
 	N_("Diasurgical maintain a chat server at Discord.gg/YQKCAYQ Follow the links to join our community where we talk about things related to Diablo, and the Hellfire expansion."),

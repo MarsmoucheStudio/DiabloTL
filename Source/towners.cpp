@@ -81,6 +81,16 @@ void InitSmith(Towner &towner, const TownerData &townerData)
 	towner.name = _("Griswold the Blacksmith");
 }
 
+void InitCower(Towner &towner, const TownerData &townerData)
+{
+	towner._tAnimWidth = 96;
+	towner.animOrder = nullptr;
+	towner.animOrderSize = 0;
+	LoadTownerAnimations(towner, "towners\\farmer\\cfrmrn2", 15, 3);
+	towner.name = _("Moo");
+}
+
+
 void InitBarOwner(Towner &towner, const TownerData &townerData)
 {
 	towner._tAnimWidth = 96;
@@ -771,12 +781,13 @@ const TownerData TownersData[] = {
 	// clang-format off
 	// type         position    dir                   init           talk
 	{ TOWN_SMITH,   { 62, 63 }, Direction::SouthWest, InitSmith,     TalkToBlackSmith  },
+	{ TOWN_COWER,     { 80, 20 }, Direction::SouthWest, InitCower,     TalkToCow  },
 	{ TOWN_HEALER,  { 55, 79 }, Direction::SouthEast, InitHealer,    TalkToHealer      },
 	{ TOWN_DEADGUY, { 24, 32 }, Direction::North,     InitTownDead,  TalkToDeadguy     },
 	{ TOWN_TAVERN,  { 55, 62 }, Direction::SouthWest, InitBarOwner,  TalkToBarOwner    },
 	{ TOWN_STORY,   { 62, 71 }, Direction::South,     InitTeller,    TalkToStoryteller },
 	{ TOWN_DRUNK,   { 71, 84 }, Direction::South,     InitDrunk,     TalkToDrunk       },
-	{ TOWN_WITCH,   { 80, 20 }, Direction::South,     InitWitch,     TalkToWitch       },
+	{ TOWN_WITCH,   { 62, 73 }, Direction::South,     InitWitch,     TalkToWitch       },
 	{ TOWN_BMAID,   { 43, 66 }, Direction::South,     InitBarmaid,   TalkToBarmaid     },
 	{ TOWN_PEGBOY,  { 11, 53 }, Direction::South,     InitBoy,       TalkToBoy         },
 	{ TOWN_COW,     { 58, 16 }, Direction::SouthWest, InitCows,      TalkToCow         },

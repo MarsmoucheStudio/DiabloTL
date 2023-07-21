@@ -64,8 +64,8 @@ void SelconnLoad()
 	SDL_Rect rect4 = { (Sint16)(uiPosition.x + 35), (Sint16)(uiPosition.y + 275), DESCRIPTION_WIDTH, 66 };
 	vecSelConnDlg.push_back(std::make_unique<UiArtText>(selconn_Description, rect4, UiFlags::FontSize12 | UiFlags::ColorUiSilverDark, 1, 16));
 
-	SDL_Rect rect5 = { (Sint16)(uiPosition.x + 30), (Sint16)(uiPosition.y + 356), 220, 31 };
-	vecSelConnDlg.push_back(std::make_unique<UiArtText>(_("no gateway needed").data(), rect5, UiFlags::AlignCenter | UiFlags::FontSize24 | UiFlags::ColorUiSilver, 0));
+	SDL_Rect rect5 = { (Sint16)(uiPosition.x + 30), (Sint16)(uiPosition.y + 360), 220, 31 };
+	vecSelConnDlg.push_back(std::make_unique<UiArtText>(_("no gateway needed").data(), rect5, UiFlags::AlignCenter | UiFlags::FontSize12 | UiFlags::ColorUiSilver, 0));
 
 	SDL_Rect rect6 = { (Sint16)(uiPosition.x + 35), (Sint16)(uiPosition.y + 393), DESCRIPTION_WIDTH, 21 };
 	vecSelConnDlg.push_back(std::make_unique<UiArtText>(selconn_Gateway, rect6, UiFlags::AlignCenter | UiFlags::FontSize12 | UiFlags::ColorUiSilverDark));
@@ -107,7 +107,7 @@ void SelconnFocus(int value)
 	int players = MAX_PLRS;
 	switch (vecConnItems[value]->m_value) {
 	case SELCONN_TCP:
-		CopyUtf8(selconn_Description, _("All computers must be connected to a TCP-compatible network or Theo's B.net (check in Support)."), sizeof(selconn_Description));
+		CopyUtf8(selconn_Description, _("All computers must be connected to a TCP-compatible network or Theo's B.net."), sizeof(selconn_Description));
 		players = MAX_PLRS;
 		break;
 	case SELCONN_ZT:

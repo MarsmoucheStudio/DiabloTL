@@ -2850,18 +2850,6 @@ void CreatePlrItems(Player &player)
 		InitializeItem(player.SpdList[1], IDI_HEAL);
 		GenerateNewSeed(player.SpdList[1]);
 		break;
-	case HeroClass::Cleric:
-		InitializeItem(player.InvBody[INVLOC_HAND_LEFT], IDI_BARBARIAN);
-		GenerateNewSeed(player.InvBody[INVLOC_HAND_LEFT]);
-
-		InitializeItem(player.InvBody[INVLOC_HAND_RIGHT], IDI_WARRSHLD);
-		GenerateNewSeed(player.InvBody[INVLOC_HAND_RIGHT]);
-		InitializeItem(player.SpdList[0], IDI_HEAL);
-		GenerateNewSeed(player.SpdList[0]);
-
-		InitializeItem(player.SpdList[1], IDI_HEAL);
-		GenerateNewSeed(player.SpdList[1]);
-		break;
 	}
 
 	Item &goldItem = player.InvList[player._pNumInv];
@@ -3018,7 +3006,7 @@ void SpawnItem(Monster &monster, Point position, bool sendmsg)
 
 	bool dropsSpecialTreasure = (monster.data().treasure & T_UNIQ) != 0;
 	bool dropBrain = Quests[Q_MUSHROOM]._qactive == QUEST_ACTIVE && Quests[Q_MUSHROOM]._qvar1 == QS_MUSHGIVEN;
-	
+
 	if (dropsSpecialTreasure && !UseMultiplayerQuests()) {
 		Item *uniqueItem = SpawnUnique(static_cast<_unique_items>(monster.data().treasure & T_MASK), position, false);
 		if (uniqueItem != nullptr && sendmsg)
@@ -4199,10 +4187,6 @@ void SpawnBoy(int lvl)
 					ivalue = INT_MAX;
 				break;
 			case HeroClass::Barbarian:
-				if (IsAnyOf(itemType, ItemType::Bow, ItemType::Staff))
-					ivalue = INT_MAX;
-				break;
-			case HeroClass::Cleric:
 				if (IsAnyOf(itemType, ItemType::Bow, ItemType::Staff))
 					ivalue = INT_MAX;
 				break;

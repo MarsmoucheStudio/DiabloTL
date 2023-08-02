@@ -872,6 +872,9 @@ void SpawnLoot(Monster &monster, bool sendmsg)
 			stream_stop();
 		Quests[Q_DEFILER]._qlog = false;
 		SpawnMapOfDoom(monster.position.tile, sendmsg);
+		CreateAmulet(monster.position.tile, 13, sendmsg, false);
+		CreateAmulet(monster.position.tile, 13, sendmsg, false);
+		CreateAmulet(monster.position.tile, 13, sendmsg, false);
 	} else if (monster.uniqueType == UniqueMonsterType::HorkDemon) {
 		if (sgGameInitInfo.bTheoQuest != 0) {
 			SpawnTheodore(monster.position.tile, sendmsg);

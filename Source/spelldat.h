@@ -13,7 +13,7 @@
 
 namespace devilution {
 
-#define MAX_SPELLS 52
+#define MAX_SPELLS 53
 
 enum class SpellType : uint8_t {
 	Skill,
@@ -73,6 +73,7 @@ enum class SpellID : int8_t {
 	Warp,
 	Reflect,
 	Berserk,
+	Confuse,
 	RingOfFire,
 	Search,
 	RuneOfFire,
@@ -174,6 +175,7 @@ enum class MissileID : int8_t {
 	Warp,
 	Reflect,
 	Berserk,
+	Confuse,
 	RingOfFire,
 	StealPotions,
 	StealMana,

@@ -699,6 +699,7 @@ void AddCryptObject(Object &object, int a2)
 			case HeroClass::Warrior:
 			case HeroClass::Barbarian:
 			case HeroClass::Cleric:
+			case HeroClass::Bomoh:
 				object._oVar2 = TEXT_BOOKA;
 				break;
 			case HeroClass::Rogue:
@@ -720,6 +721,7 @@ void AddCryptObject(Object &object, int a2)
 			case HeroClass::Warrior:
 			case HeroClass::Barbarian:
 			case HeroClass::Cleric:
+			case HeroClass::Bomoh:
 				object._oVar2 = TEXT_BOOKB;
 				break;
 			case HeroClass::Rogue:
@@ -741,6 +743,7 @@ void AddCryptObject(Object &object, int a2)
 			case HeroClass::Warrior:
 			case HeroClass::Barbarian:
 			case HeroClass::Cleric:
+			case HeroClass::Bomoh:
 				object._oVar2 = TEXT_BOOKC;
 				break;
 			case HeroClass::Rogue:
@@ -2071,6 +2074,9 @@ void OperateChamberOfBoneBook(Object &questBook, bool sendmsg)
 	case HeroClass::Cleric:
 		textdef = TEXT_BONER;
 		break;
+	case HeroClass::Bomoh:
+		textdef = TEXT_BONER;
+		break;
 	}
 	if (sendmsg) {
 		Quests[Q_SCHAMB]._qmsg = textdef;
@@ -2850,6 +2856,10 @@ void OperateShrineOily(Player &player, Point spawnPosition)
 		break;
 	case HeroClass::Cleric:
 		ModifyPlrVit(player, 2);
+		break;
+	case HeroClass::Bomoh:
+		ModifyPlrVit(player, 1);
+		ModifyPlrMag(player, 1);
 		break;
 	case HeroClass::Monk:
 		ModifyPlrStr(player, 1);
@@ -3891,6 +3901,9 @@ void InitObjects()
 				case HeroClass::Cleric:
 					spId = TEXT_BLINDING;
 					break;
+				case HeroClass::Bomoh:
+					spId = TEXT_BLINDING;
+					break;
 				}
 				Quests[Q_BLIND]._qmsg = spId;
 				AddBookLever(OBJ_BLINDBOOK, { SetPiece.position, SetPiece.size + 1 }, spId);
@@ -3918,6 +3931,9 @@ void InitObjects()
 					spId = TEXT_BLOODY;
 					break;
 				case HeroClass::Cleric:
+					spId = TEXT_BLOODY;
+					break;
+				case HeroClass::Bomoh:
 					spId = TEXT_BLOODY;
 					break;
 				}
@@ -3954,6 +3970,9 @@ void InitObjects()
 					spId = TEXT_BLOODWAR;
 					break;
 				case HeroClass::Cleric:
+					spId = TEXT_BLOODWAR;
+					break;
+				case HeroClass::Bomoh:
 					spId = TEXT_BLOODWAR;
 					break;
 				}

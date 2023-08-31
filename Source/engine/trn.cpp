@@ -145,13 +145,16 @@ std::optional<std::array<uint8_t, 256>> GetClassTRN(Player &player)
 		path = "plrgfx\\monk.trn";
 		break;
 	case HeroClass::Bard:
-		path = "plrgfx\\bard.trn";
+		path = "pal\\Bard.trn";
 		break;
 	case HeroClass::Barbarian:
 		path = "plrgfx\\barbarian.trn";
 		break;
 	case HeroClass::Cleric:
-		path = "plrgfx\\barbarian.trn";
+		path = "pal\\Cleric.trn";
+		break;
+	case HeroClass::Bomoh:
+		path = "pal\\Mojomancer.trn";
 		break;
 	}
 

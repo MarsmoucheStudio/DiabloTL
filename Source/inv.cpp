@@ -1049,6 +1049,7 @@ void InitInv()
 	case HeroClass::Warrior:
 	case HeroClass::Barbarian:
 	case HeroClass::Cleric:
+	case HeroClass::Bomoh:
 		pInvCels = LoadCel("data\\inv\\inv", static_cast<uint16_t>(SidePanelSize.width));
 		break;
 	case HeroClass::Rogue:

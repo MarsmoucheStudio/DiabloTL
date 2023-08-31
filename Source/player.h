@@ -62,8 +62,9 @@ enum class HeroClass : uint8_t {
 	Bard,
 	Barbarian,
 	Cleric,
+	Bomoh,
 
-	LAST = Cleric
+	LAST = Bomoh
 };
 
 enum class CharacterAttribute : uint8_t {
@@ -183,7 +184,7 @@ constexpr std::array<char, 9> WepChar = {
 };
 
 /** Maps from player class to letter used in graphic files. */
-constexpr std::array<char, 7> CharChar = {
+constexpr std::array<char, 8> CharChar = {
 	'w', // warrior
 	'r', // rogue
 	's', // sorcerer
@@ -191,6 +192,7 @@ constexpr std::array<char, 7> CharChar = {
 	'b',
 	'c',
 	't', // cleric
+	'd', // Bomoh
 };
 
 /**

@@ -5,18 +5,6 @@
 
 Theodore's lair is a mod for Diablo 1 and Hellfire (Hellfire is recommended) that aims to increase the difficulty of the game and add more content based on the germanic folklore. We add some germanic monsters and we rename others, we add some unique item with variables and we add some new bosses.
 
-
-
-
-before the horadrim used it as a temple and built the cathedral on it, the dungeon was the kingdom of the Nibelungen, a people of dwarfs. the years have passed and the dwarves have died, leaving their treasures in the hands of evil creatures, notably a dragon who has renamed Nibelung and his legion.
-
-The Horadrim have decided to lock the soul stone of Diablo, the lord of terror there because no one can survive the monster in the dungeon. however Diablo is free and in the dungeon ready to destroy Tristram.
-
-Many adventurers tried to kill Diablo and find the treasure, like the brave knight Sirfreid or Odoacer the soldier but none of them came back...
-
-
-
-
 If you need help or just want to trade item or play with other you can go on our site with this link :https://dinde451.github.io/Theodore-s-Lair/
 
 Theodore's lair is built using DevilutionX a great mod for Diablo 1 and Hellfire you can download it by this link: https://github.com/diasurgical/devilutionX
